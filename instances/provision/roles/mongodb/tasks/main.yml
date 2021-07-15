@@ -1,0 +1,54 @@
+- hosts: all
+  become: true
+  name: mongo-install
+  tasks:
+    - name: Install aptitude using apt
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: yes
+    - name: Add MongoDB key
+      become: yes
+      apt_key:
+        url: https://www.mongodb.org/static/pgp/server-4.4.asc
+        state: present
+
+    - name: Add MongoDB repository
+      become: yes
+      apt_repository:
+        filename: /etc/apt/sources.list.d/mongodb-org-4.4.list
+        repo: deb https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.4 multiverse
+        state: present
+        update_cache: yes
+
+    - name: Install mongodb
+      become: yes
+      apt:
+        update_cache: yes
+        name: mongodb-org
+        state: present
+
+    - name: Create systemd service file
+      become: yes
+      template:
+        src: ./templates/mongod.service
+        dest: /lib/systemd/system/mongod.service
+
+    - name: Enable Mongod service
+      become: yes
+      command: "{{ item }}"
+      with_items:
+        - systemctl --system daemon-reload
+        - systemctl enable mongod.service
+
+    - name: Copy MongoDB configuration file
+      become: yes
+      template:
+        src: ./templates/mongod.conf
+        dest: /etc/mongod.conf
+
+    - name: Restart mongodb
+      become: yes
+      service:
+        name: mongod
+        state: restarted
