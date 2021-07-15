@@ -5,6 +5,6 @@ Change the variables in terraform.tfvars.
 
 terraform init
 
-terraform plan --out "plan.out"
+terraform plan --out="plan.out"
 
 terraform apply "plan.out"
